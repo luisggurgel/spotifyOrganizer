@@ -1,0 +1,29 @@
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Credenciais e Cache de Autenticação (NUNCA COMPARTILHE)
+.env
+.cache
+.cache-*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs
+*.log
+spotify_sorter.log
+
+# Testes
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
