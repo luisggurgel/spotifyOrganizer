@@ -111,3 +111,30 @@ Todos os testes usam mocks e cobrem paginação, detecção de idiomas, prevenç
 - Suas credenciais e tokens são mantidos localmente nos arquivos `.env` e `.cache`.
 - Esses arquivos já estão incluídos no `.gitignore` para nunca serem compartilhados acidentalmente.
 - O aplicativo só realiza ações de **leitura da sua biblioteca** e **criação/adição às playlists próprias** (nunca apaga nem altera suas playlists existentes).
+
+---
+
+## ☁️ Hospedagem na Nuvem (AWS) e GitHub
+
+Esta aplicação foi preparada nativamente para ser hospedada na **AWS** (ECS Fargate, AWS App Runner ou Elastic Beanstalk) e para ser enviada ao GitHub com segurança:
+
+1. **Git / GitHub:** O projeto já está inicializado com `git init` e com o `.gitignore` devidamente configurado, impedindo vazamentos do `.env` ou tokens de cache. Para subir pro GitHub:
+   ```bash
+   git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+   git push -u origin master
+   ```
+
+2. **Web Server Nativo:** Como ambientes de nuvem não possuem "tela" para abrir o navegador e autorizar o login do Spotify, o projeto inclui o arquivo **`src/web.py`**, que é um Web App construído em **Flask**.
+
+3. **Deploy via Docker na AWS:**
+   O projeto já contém um **`Dockerfile`** configurado com `gunicorn`.
+   - **No AWS App Runner ou ECS:** Basta conectar o repositório do GitHub ou enviar a imagem via AWS ECR (Elastic Container Registry).
+   - O contêiner expõe automaticamente a porta `8080`.
+   - Lembre-se de configurar as **Variáveis de Ambiente** (`SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `FLASK_SECRET_KEY` e `SPOTIFY_REDIRECT_URI`) no painel da AWS.
+   - Configure no Dashboard do Spotify a nova *Redirect URI* gerada pela AWS (ex: `https://seu-app.awsapprunner.com/callback`).
+
+**Para testar o modo Web (Nuvem) localmente:**
+```bash
+python -m src.web
+```
+Em seguida, acesse `http://localhost:8080` no seu navegador!
