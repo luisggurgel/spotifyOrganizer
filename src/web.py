@@ -10,14 +10,15 @@ import threading
 import logging
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "spotify-sorter-secret-session-key-2026")
 app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_auth_manager():
     client_id, client_secret, redirect_uri = get_credentials()
-    # No cloud, o open_browser é False. O Flask lidará com a rota
+    if not client_id or not client_secret or "client_id" in client_id.lower() or "seu_client_id" in client_id.lower():
+        return None
     return SpotifyOAuth(
         client_id=client_id,
         client_secret=client_secret,
@@ -30,23 +31,58 @@ def get_auth_manager():
 @app.route('/')
 def index():
     auth_manager = get_auth_manager()
-    if not auth_manager.validate_token(auth_manager.cache_handler.get_cached_token()):
-        auth_url = auth_manager.get_authorize_url()
+    if not auth_manager:
+        return render_template_string("""
+            <html><head><title>Spotify Language Sorter - Configuração</title></head>
+            <body style="font-family: sans-serif; text-align: center; margin-top: 60px; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                    <h2 style="color: #e74c3c;">⚠️ Credenciais não configuradas</h2>
+                    <p>O arquivo <code>.env</code> no servidor ainda não contém suas credenciais reais do Spotify.</p>
+                    <p style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 5px; font-size: 14px;">
+                        Abra o terminal na AWS e edite o arquivo <code>.env</code>:<br><br>
+                        <code>nano .env</code><br><br>
+                        Preencha com seu Client ID e Client Secret:<br>
+                        <b>SPOTIFY_CLIENT_ID=</b>seu_client_id_real<br>
+                        <b>SPOTIFY_CLIENT_SECRET=</b>seu_client_secret_real<br>
+                        <b>SPOTIFY_REDIRECT_URI=</b>http://{{ host }}/callback
+                    </p>
+                    <p><a href="/" style="padding: 10px 20px; background-color: #1DB954; color: white; text-decoration: none; border-radius: 5px;">Recarregar Página</a></p>
+                </div>
+            </body></html>
+        """, host=request.host)
+
+    try:
+        cached_token = auth_manager.cache_handler.get_cached_token()
+        token_valid = auth_manager.validate_token(cached_token) if cached_token else False
+    except Exception as e:
+        logging.error(f"Erro ao verificar token: {e}")
+        token_valid = False
+
+    if not token_valid:
+        try:
+            auth_url = auth_manager.get_authorize_url()
+        except Exception as e:
+            return f"Erro ao gerar URL de autorização do Spotify: {e}", 500
+
         return render_template_string("""
             <html><head><title>Spotify Language Sorter</title></head>
             <body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-                <h1>Organizador de Playlists por Idioma</h1>
-                <p>Para começar, faça login com o seu Spotify.</p>
-                <a href="{{ auth_url }}" style="padding: 10px 20px; background-color: #1DB954; color: white; text-decoration: none; border-radius: 5px;">Login com Spotify</a>
+                <div style="max-width: 500px; margin: 0 auto;">
+                    <h1>Organizador de Playlists por Idioma</h1>
+                    <p>Separe suas músicas curtidas por idioma automaticamente.</p>
+                    <br>
+                    <a href="{{ auth_url }}" style="padding: 14px 28px; background-color: #1DB954; color: white; text-decoration: none; font-size: 16px; font-weight: bold; border-radius: 25px; display: inline-block;">Conectar com Spotify</a>
+                </div>
             </body></html>
         """, auth_url=auth_url)
     else:
         return render_template_string("""
             <html><head><title>Spotify Language Sorter</title></head>
             <body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-                <h1>Você está logado!</h1>
+                <h1>Você está conectado! 🎉</h1>
+                <p>Clique abaixo para iniciar a organização das suas músicas.</p>
                 <form action="/sync" method="post">
-                    <button type="submit" style="padding: 10px 20px; background-color: #1DB954; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">Iniciar Sincronização em Background</button>
+                    <button type="submit" style="padding: 12px 24px; background-color: #1DB954; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: bold;">Iniciar Organização em Segundo Plano</button>
                 </form>
             </body></html>
         """)
