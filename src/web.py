@@ -122,10 +122,9 @@ def sync():
     if not token_info:
         return redirect('/')
         
-    sp = spotipy.Spotify(auth_manager=auth_manager)
-    
+    # Extrair os dados necessários antes de iniciar a thread
     # Rodar em background para não travar a requisição (pode demorar minutos)
-    thread = threading.Thread(target=run_sync, args=(sp,))
+    thread = threading.Thread(target=run_sync, args=(token_info,))
     thread.start()
     
     return render_template_string("""
@@ -146,7 +145,20 @@ def sync():
         </body></html>
     """)
 
-def run_sync(sp):
+def run_sync(token_info):
+    from spotipy.oauth2 import SpotifyOAuth
+    import spotipy
+    from src.config import get_credentials, SPOTIFY_SCOPES
+    
+    client_id, client_secret, redirect_uri = get_credentials()
+    auth_manager = SpotifyOAuth(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirect_uri=redirect_uri,
+        scope=SPOTIFY_SCOPES,
+        cache_handler=spotipy.cache_handler.MemoryCacheHandler(token_info=token_info)
+    )
+    sp = spotipy.Spotify(auth_manager=auth_manager)
     manager = SpotifyManager(sp)
     logging.info("Carregando playlists existentes...")
     manager.load_existing_playlists()
