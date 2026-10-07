@@ -33,9 +33,15 @@ def index():
     auth_manager = get_auth_manager()
     if not auth_manager:
         return render_template_string("""
-            <html><head><title>Spotify Language Sorter - Configuração</title></head>
-            <body style="font-family: sans-serif; text-align: center; margin-top: 60px; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Spotify Language Sorter - Configuração</title>
+            </head>
+            <body style="font-family: sans-serif; text-align: center; margin: 0; padding: 20px; color: #333; background-color: #f4f4f4;">
+                <div style="max-width: 600px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: white;">
                     <h2 style="color: #e74c3c;">⚠️ Credenciais não configuradas</h2>
                     <p>O arquivo <code>.env</code> no servidor ainda não contém suas credenciais reais do Spotify.</p>
                     <p style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 5px; font-size: 14px;">
@@ -65,9 +71,15 @@ def index():
             return f"Erro ao gerar URL de autorização do Spotify: {e}", 500
 
         return render_template_string("""
-            <html><head><title>Spotify Language Sorter</title></head>
-            <body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-                <div style="max-width: 500px; margin: 0 auto;">
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Spotify Language Sorter</title>
+            </head>
+            <body style="font-family: sans-serif; text-align: center; margin: 0; padding: 20px; background-color: #f4f4f4;">
+                <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <h1>Organizador de Playlists por Idioma</h1>
                     <p>Separe suas músicas curtidas por idioma automaticamente.</p>
                     <br>
@@ -77,13 +89,21 @@ def index():
         """, auth_url=auth_url)
     else:
         return render_template_string("""
-            <html><head><title>Spotify Language Sorter</title></head>
-            <body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Spotify Language Sorter</title>
+            </head>
+            <body style="font-family: sans-serif; text-align: center; margin: 0; padding: 20px; background-color: #f4f4f4;">
+                <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <h1>Você está conectado! 🎉</h1>
                 <p>Clique abaixo para iniciar a organização das suas músicas.</p>
                 <form action="/sync" method="post">
-                    <button type="submit" style="padding: 12px 24px; background-color: #1DB954; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: bold;">Iniciar Organização em Segundo Plano</button>
+                    <button type="submit" style="width: 100%; max-width: 300px; padding: 16px 24px; background-color: #1DB954; color: white; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px;">Iniciar Organização</button>
                 </form>
+                </div>
             </body></html>
         """)
 
@@ -109,12 +129,20 @@ def sync():
     thread.start()
     
     return render_template_string("""
-        <html><head><title>Sincronizando</title></head>
-        <body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-            <h1>Sincronização iniciada!</h1>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Sincronizando</title>
+        </head>
+        <body style="font-family: sans-serif; text-align: center; margin: 0; padding: 20px; background-color: #f4f4f4;">
+            <div style="max-width: 500px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h1>Sincronização iniciada! 🚀</h1>
             <p>A organização está acontecendo no servidor em background.</p>
-            <p>Você pode fechar esta página e conferir seu Spotify em alguns minutos.</p>
-            <a href="/">Voltar</a>
+            <p style="margin-bottom: 30px;">Você pode fechar esta página e conferir seu Spotify em alguns minutos.</p>
+            <a href="/" style="padding: 14px 28px; background-color: #333; color: white; text-decoration: none; border-radius: 25px; font-weight: bold;">Voltar ao Início</a>
+            </div>
         </body></html>
     """)
 
