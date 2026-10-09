@@ -6,8 +6,12 @@ Organize todas as músicas curtidas da sua conta do Spotify automaticamente em p
 
 ## Recursos Principais
 
-- **Classificação Inteligente:** Identifica idiomas com alta precisão usando o `lingua-language-detector`, considerando título, artista, álbum e características de escrita.
-- **Categoria Desconhecidos/Instrumentais:** Músicas sem letras ou ambíguas vão para *Spotify — Instrumental/Unknown*.
+- **Classificação de Idioma em Cascata (Nova Arquitetura!):** Identifica idiomas com precisão extrema usando uma cascata de 5 etapas:
+  1. **Detecção de Scripts Unicode:** CJK (Katakana, Hangul, Cirílico) → ~100% preciso para JP, KR, RU, CN.
+  2. **Gêneros de Artistas (Spotify API):** Pré-busca de gêneros do artista (`sertanejo`, `k-pop`, `reggaeton`) → Mapeia mais de 300 palavras-chave para o idioma correto, eliminando erros com títulos latinos mistos.
+  3. **High-Confidence Lingua:** Usa o `lingua-language-detector` no título com limite de 88% de confiança.
+  4. **Fallback:** Usa o `lingua-language-detector` combinando título + álbum com 75% de confiança.
+  5. **Categoria Desconhecidos/Instrumentais:** Músicas sem letras claras vão para *Spotify — Instrumental/Unknown*.
 - **100% Idempotente e Seguro:** Não cria playlists repetidas nem adiciona faixas duplicadas. Pode rodar quantas vezes quiser.
 - **Assistente Interativo para Iniciantes:** Se o arquivo `.env` não existir, o aplicativo guia a configuração no próprio terminal.
 - **Executável com 1 Clique:** Arquivos `run.bat` (Windows) e `run.sh` (Linux/Mac) configuram o ambiente virtual e instalam tudo automaticamente.

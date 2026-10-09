@@ -165,6 +165,14 @@ def run_sync(token_info):
     
     logging.info("Buscando músicas curtidas...")
     liked_songs = manager.fetch_all_liked_songs()
+
+    # Pre-fetch artist genres for accurate language classification
+    logging.info("Buscando gêneros dos artistas...")
+    try:
+        manager.prefetch_artist_genres(liked_songs)
+        logging.info("Gêneros de %d artistas carregados.", len(manager.artist_genres_cache))
+    except Exception as e:
+        logging.warning("Erro ao buscar gêneros (classificação continuará menos precisa): %s", e)
     
     lang_to_tracks = defaultdict(list)
     for track in liked_songs:

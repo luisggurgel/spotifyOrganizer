@@ -44,6 +44,20 @@ def main():
         print(f"\nErro ao buscar músicas: {e}")
         sys.exit(1)
 
+    # ── NEW STEP: Pre-fetch artist genres for accurate classification ──
+    print("\nBuscando gêneros dos artistas para classificação precisa...")
+    try:
+        manager.prefetch_artist_genres(
+            liked_songs,
+            progress_callback=lambda fetched, total: print(
+                f"\rBuscando gêneros dos artistas... {fetched}/{total}", end=""
+            ),
+        )
+        print(f"\nGêneros de {len(manager.artist_genres_cache)} artistas carregados.")
+    except Exception as e:
+        print(f"\nAviso: Erro ao buscar gêneros (a classificação continuará, porém menos precisa): {e}")
+        logging.warning("Error prefetching artist genres: %s", e)
+
     # Statistics
     total_analyzed = len(liked_songs)
     language_counts = defaultdict(int)
@@ -59,34 +73,34 @@ def main():
         try:
             track_name = track.get('name', 'Unknown')
             artists = ", ".join([a.get('name', '') for a in track.get('artists', [])])
-            
+
             # Show progress
             sys.stdout.write("\033[K") # Clear to the end of line
             print(f"\r[{idx}/{total_analyzed}] Analisando: {artists} — {track_name}"[:100], end="")
-            
+
             lang = detect_language(track)
-            
+
             if lang == "Instrumental/Unknown":
                 unclassified_count += 1
-            
+
             language_counts[lang] += 1
             lang_to_tracks[lang].append(track['id'])
-            
+
         except Exception as e:
             errors.append(f"Erro ao analisar '{track_name}': {e}")
             logging.error(f"Error analyzing track {track.get('id')}: {e}")
 
     print("\n\nAdicionando músicas às playlists...")
-    
+
     total_langs = len(lang_to_tracks)
     for idx, (lang, track_ids) in enumerate(lang_to_tracks.items(), 1):
         try:
             print_progress(idx, total_langs, prefix='Atualizando Playlists:', suffix=f'({lang})', length=30)
-            
+
             playlist_id = manager.get_playlist_id(lang)
             added = manager.add_tracks_to_playlist(playlist_id, track_ids)
             added_counts[lang] = added
-            
+
         except Exception as e:
             errors.append(f"Erro ao atualizar playlist '{lang}': {e}")
             logging.error(f"Error updating playlist for {lang}: {e}")

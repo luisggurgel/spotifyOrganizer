@@ -95,3 +95,56 @@ def test_add_tracks_chunking(manager, mock_spotipy):
     added = manager.add_tracks_to_playlist('pl_1', tracks)
     assert added == 150
     assert mock_spotipy.playlist_add_items.call_count == 2
+
+def test_prefetch_artist_genres(manager, mock_spotipy):
+    """prefetch_artist_genres should call sp.artists in batches of 50."""
+    tracks = [
+        {
+            'id': f't{i}',
+            'name': f'Track {i}',
+            'artists': [{'name': f'Artist {i}', 'id': f'a{i}'}],
+            'album': {'name': f'Album {i}'},
+        }
+        for i in range(3)
+    ]
+
+    mock_spotipy.artists.return_value = {
+        'artists': [
+            {'id': 'a0', 'genres': ['sertanejo']},
+            {'id': 'a1', 'genres': ['k-pop']},
+            {'id': 'a2', 'genres': ['rock', 'indie rock']},
+        ]
+    }
+
+    manager.prefetch_artist_genres(tracks)
+
+    assert manager.artist_genres_cache['a0'] == ['sertanejo']
+    assert manager.artist_genres_cache['a1'] == ['k-pop']
+    assert manager.artist_genres_cache['a2'] == ['rock', 'indie rock']
+    mock_spotipy.artists.assert_called_once()
+
+def test_prefetch_artist_genres_deduplication(manager, mock_spotipy):
+    """Same artist on multiple tracks should only be fetched once."""
+    tracks = [
+        {
+            'id': 't1', 'name': 'Track 1',
+            'artists': [{'name': 'Same Artist', 'id': 'same'}],
+            'album': {'name': 'A1'},
+        },
+        {
+            'id': 't2', 'name': 'Track 2',
+            'artists': [{'name': 'Same Artist', 'id': 'same'}],
+            'album': {'name': 'A2'},
+        },
+    ]
+
+    mock_spotipy.artists.return_value = {
+        'artists': [{'id': 'same', 'genres': ['mpb']}]
+    }
+
+    manager.prefetch_artist_genres(tracks)
+
+    assert manager.artist_genres_cache['same'] == ['mpb']
+    # Should call API exactly once with one artist
+    mock_spotipy.artists.assert_called_once_with(['same'])
+
